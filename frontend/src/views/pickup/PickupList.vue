@@ -28,6 +28,8 @@
       <el-table :data="list" stripe border>
         <el-table-column prop="pickupNo" label="领用单号" width="170" />
         <el-table-column prop="shipperName" label="发货方" />
+        <el-table-column prop="carrierName" label="承运商" />
+        <el-table-column prop="destStoreName" label="目的门店" />
         <el-table-column prop="palletCount" label="数量" width="80" align="center" />
         <el-table-column prop="totalDeposit" label="押金(元)" width="120" align="right">
           <template #default="{row}">¥{{ fmt(row.totalDeposit) }}</template>
@@ -41,9 +43,10 @@
           </template>
         </el-table-column>
         <el-table-column prop="remark" label="备注" show-overflow-tooltip />
-        <el-table-column label="操作" width="100">
+        <el-table-column label="操作" width="140">
           <template #default="{row}">
             <el-button type="primary" link size="small" @click="viewDetails(row)">明细</el-button>
+            <el-button type="success" link size="small" @click="viewLifecycle(row)">追踪</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -54,6 +57,16 @@
         <el-form-item label="发货方" prop="shipperId">
           <el-select v-model="form.shipperId" placeholder="请选择发货方" filterable style="width:100%;" @change="onShipperChange">
             <el-option v-for="s in shippers" :key="s.id" :label="s.userName" :value="s.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="承运商" prop="carrierId">
+          <el-select v-model="form.carrierId" placeholder="请选择承运商" filterable style="width:100%;">
+            <el-option v-for="c in carriers" :key="c.id" :label="c.userName" :value="c.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="目的门店" prop="destStoreId">
+          <el-select v-model="form.destStoreId" placeholder="请选择目的门店" filterable style="width:100%;">
+            <el-option v-for="s in stores" :key="s.id" :label="s.userName" :value="s.id" />
           </el-select>
         </el-form-item>
         <el-form-item v-if="form.shipperId" label="可用押金">
@@ -110,6 +123,8 @@
       <el-descriptions :column="2" border size="small" style="margin-bottom:16px;">
         <el-descriptions-item label="领用单号">{{ currentPickup.pickupNo }}</el-descriptions-item>
         <el-descriptions-item label="发货方">{{ currentPickup.shipperName }}</el-descriptions-item>
+        <el-descriptions-item label="承运商">{{ currentPickup.carrierName }}</el-descriptions-item>
+        <el-descriptions-item label="目的门店">{{ currentPickup.destStoreName }}</el-descriptions-item>
         <el-descriptions-item label="数量">{{ currentPickup.palletCount }}</el-descriptions-item>
         <el-descriptions-item label="押金">¥{{ fmt(currentPickup.totalDeposit) }}</el-descriptions-item>
         <el-descriptions-item label="日期">{{ currentPickup.pickupDate }}</el-descriptions-item>
@@ -124,12 +139,72 @@
           <template #default="{row}">
             <el-tag v-if="row.returnStatus==='NOT_RETURNED'" type="warning" size="small">未归还</el-tag>
             <el-tag v-else-if="row.returnStatus==='NORMAL'" type="success" size="small">正常归还</el-tag>
-            <el-tag v-else-if="row.returnStatus==='DAMAGED'" size="small">破损</el-tag>
-            <el-tag v-else type="danger" size="small">丢失</el-tag>
+            <el-tag v-else-if="row.returnStatus==='MISSING_PART'" size="small">缺件</el-tag>
+            <el-tag v-else-if="row.returnStatus==='STAIN'" size="small">污损</el-tag>
+            <el-tag v-else-if="row.returnStatus==='SCRAPPED'" type="danger" size="small">整托报废</el-tag>
+            <el-tag v-else-if="row.returnStatus==='LOST'" type="danger" size="small">丢失</el-tag>
+            <el-tag v-else size="small">{{ row.returnStatus }}</el-tag>
           </template>
         </el-table-column>
+        <el-table-column prop="currentHolderName" label="当前持有人" />
         <el-table-column prop="remark" label="备注" show-overflow-tooltip />
       </el-table>
+    </el-dialog>
+
+    <el-dialog v-model="lifecycleVisible" title="押金生命周期追踪" width="900px">
+      <div v-for="(life, idx) in currentLifecycles" :key="idx" style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid #ebeef5;">
+        <el-descriptions :column="3" border size="small" style="margin-bottom:12px;">
+          <el-descriptions-item label="托盘编码">{{ life.palletCode }}</el-descriptions-item>
+          <el-descriptions-item label="初始押金">¥{{ fmt(life.initialDepositAmount) }}</el-descriptions-item>
+          <el-descriptions-item label="当前押金">¥{{ fmt(life.currentDepositAmount) }}</el-descriptions-item>
+          <el-descriptions-item label="累计扣款">¥{{ fmt(life.totalDeductedAmount) }}</el-descriptions-item>
+          <el-descriptions-item label="当前状态">
+            <el-tag size="small">{{ life.currentStatus }}</el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="最新时间">{{ life.latestEventTime }}</el-descriptions-item>
+          <el-descriptions-item label="初始承运商">{{ life.initialCarrierName }}</el-descriptions-item>
+          <el-descriptions-item label="目的门店" :span="2">{{ life.destStoreName }}</el-descriptions-item>
+        </el-descriptions>
+        <el-timeline>
+          <el-timeline-item
+            v-for="(event, eIdx) in life.events"
+            :key="eIdx"
+            :timestamp="event.eventTime"
+            :type="getEventTypeColor(event.eventType)"
+            size="large">
+            <el-card shadow="hover" size="small">
+              <h4 style="margin:0 0 8px 0;">{{ event.eventTypeName }}</h4>
+              <p style="margin:4px 0;">
+                单据号：{{ event.eventNo }}
+              </p>
+              <p style="margin:4px 0;" v-if="event.fromHolderName">
+                持有人变更：{{ event.fromHolderName }} → {{ event.toHolderName }}
+              </p>
+              <p style="margin:4px 0;" v-if="event.toHolderName && !event.fromHolderName">
+                持有人：{{ event.toHolderName }}
+              </p>
+              <p style="margin:4px 0;" v-if="event.depositBearerName">
+                押金承担方：{{ event.depositBearerName }}
+              </p>
+              <p style="margin:4px 0;" v-if="event.depositAmount">
+                押金金额：<b>¥{{ fmt(event.depositAmount) }}</b>
+              </p>
+              <p style="margin:4px 0;" v-if="event.deductionAmount">
+                扣款金额：<b class="amount-negative">¥{{ fmt(event.deductionAmount) }}</b>
+              </p>
+              <p style="margin:4px 0;" v-if="event.returnStatusName">
+                归还状态：{{ event.returnStatusName }}
+              </p>
+              <p style="margin:4px 0;" v-if="event.damageTypeName">
+                破损类型：{{ event.damageTypeName }}
+              </p>
+              <p style="margin:4px 0;color:#909399;" v-if="event.remark">
+                备注：{{ event.remark }}
+              </p>
+            </el-card>
+          </el-timeline-item>
+        </el-timeline>
+      </div>
     </el-dialog>
   </div>
 </template>
@@ -138,10 +213,11 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-import { listShippers } from '../../api/auth'
+import { listShippers, listCarriers, listStores } from '../../api/auth'
 import { listAvailablePallets } from '../../api/pallet'
 import { getDepositBalance } from '../../api/deposit'
 import { listPickups, getPickupDetails, createPickup } from '../../api/palletPickup'
+import { getLifecyclesByPickupId } from '../../api/depositLifecycle'
 
 const fmt = (v) => v ? Number(v).toFixed(2) : '0.00'
 const currentUser = JSON.parse(localStorage.getItem('pallet_user') || '{}')
@@ -149,18 +225,31 @@ const currentUser = JSON.parse(localStorage.getItem('pallet_user') || '{}')
 const query = reactive({ shipperId: null, status: '' })
 const list = ref([])
 const shippers = ref([])
+const carriers = ref([])
+const stores = ref([])
 const availablePallets = ref([])
 const shipperBalance = ref({ availableAmount: 0 })
 
 const dialogVisible = ref(false)
 const detailVisible = ref(false)
+const lifecycleVisible = ref(false)
 const formRef = ref(null)
 const submitting = ref(false)
 const currentPickup = ref({})
 const currentDetails = ref([])
-const form = reactive({ shipperId: null, pickupDate: new Date().toISOString().slice(0,10), details: [], remark: '' })
+const currentLifecycles = ref([])
+const form = reactive({ 
+  shipperId: null, 
+  carrierId: null, 
+  destStoreId: null, 
+  pickupDate: new Date().toISOString().slice(0,10), 
+  details: [], 
+  remark: '' 
+})
 const rules = {
   shipperId: [{ required: true, message: '请选择发货方', trigger: 'change' }],
+  carrierId: [{ required: true, message: '请选择承运商', trigger: 'change' }],
+  destStoreId: [{ required: true, message: '请选择目的门店', trigger: 'change' }],
   pickupDate: [{ required: true, message: '请选择日期', trigger: 'change' }]
 }
 
@@ -192,7 +281,14 @@ const addDetail = () => form.details.push({ palletId: null, palletCode: '', rema
 const removeDetail = (idx) => form.details.splice(idx, 1)
 
 const handleAdd = async () => {
-  Object.assign(form, { shipperId: currentUser.roleType === 'SHIPPER' ? currentUser.userId : (shippers.value[0]?.id || null), pickupDate: new Date().toISOString().slice(0,10), details: [], remark: '' })
+  Object.assign(form, { 
+    shipperId: currentUser.roleType === 'SHIPPER' ? currentUser.userId : (shippers.value[0]?.id || null), 
+    carrierId: null,
+    destStoreId: null,
+    pickupDate: new Date().toISOString().slice(0,10), 
+    details: [], 
+    remark: '' 
+  })
   if (form.details.length === 0) addDetail()
   if (form.shipperId) await onShipperChange()
   else availablePallets.value = await listAvailablePallets() || []
@@ -218,9 +314,25 @@ const viewDetails = async (row) => {
   currentDetails.value = await getPickupDetails(row.id) || []
   detailVisible.value = true
 }
+const viewLifecycle = async (row) => {
+  currentLifecycles.value = await getLifecyclesByPickupId(row.id) || []
+  lifecycleVisible.value = true
+}
+const getEventTypeColor = (type) => {
+  const colors = {
+    'PICKUP': 'primary',
+    'TRANSFER': 'warning',
+    'RETURN': 'success',
+    'DEDUCTION': 'danger',
+    'SETTLEMENT': 'info'
+  }
+  return colors[type] || ''
+}
 
 onMounted(async () => {
   shippers.value = await listShippers() || []
+  carriers.value = await listCarriers() || []
+  stores.value = await listStores() || []
   if (currentUser.roleType === 'SHIPPER') query.shipperId = currentUser.userId
   loadData()
 })

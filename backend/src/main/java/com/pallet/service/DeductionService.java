@@ -58,6 +58,7 @@ public class DeductionService {
             Long shipperId,
             String shipperName,
             String deductionType,
+            String damageType,
             BigDecimal deductionAmount,
             LocalDate deductionDate,
             Long periodId,
@@ -71,6 +72,7 @@ public class DeductionService {
         deduction.setShipperId(shipperId);
         deduction.setShipperName(shipperName);
         deduction.setDeductionType(deductionType);
+        deduction.setDamageType(damageType);
         deduction.setDeductionAmount(deductionAmount);
         deduction.setDeductionDate(deductionDate);
         deduction.setPeriodId(periodId);
@@ -97,6 +99,7 @@ public class DeductionService {
                 shipperId,
                 shipperName,
                 deductionType,
+                null,
                 deductionAmount,
                 deductionDate,
                 period != null ? period.getId() : null,

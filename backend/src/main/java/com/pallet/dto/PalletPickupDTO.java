@@ -11,6 +11,10 @@ import java.util.List;
 public class PalletPickupDTO {
     @NotNull(message = "发货方ID不能为空")
     private Long shipperId;
+    @NotNull(message = "承运商ID不能为空")
+    private Long carrierId;
+    @NotNull(message = "目的门店ID不能为空")
+    private Long destStoreId;
     @NotNull(message = "领取日期不能为空")
     private LocalDate pickupDate;
     @NotEmpty(message = "领取托盘明细不能为空")

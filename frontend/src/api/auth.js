@@ -11,3 +11,6 @@ export const listShippers = () =>
 
 export const listCarriers = () =>
   request.get('/auth/users/carriers')
+
+export const listStores = () =>
+  request.get('/auth/users/stores')

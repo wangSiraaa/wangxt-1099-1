@@ -46,12 +46,6 @@ public class AccountPeriodController {
         return Result.success();
     }
 
-    @PutMapping("/{id}/reopen")
-    public Result<Void> reopenPeriod(@PathVariable Long id) {
-        accountPeriodService.reopenPeriod(id);
-        return Result.success();
-    }
-
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
         accountPeriodService.delete(id);

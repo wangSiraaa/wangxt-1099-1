@@ -16,6 +16,8 @@ public class PalletPickupDetail {
     private BigDecimal depositAmount;
     private String returnStatus;
     private String remark;
+    private Long currentHolderId;
+    private String currentHolderName;
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 }

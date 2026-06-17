@@ -16,6 +16,7 @@ public class PalletReturnDetail {
     private String palletCode;
     private String returnStatus;
     private BigDecimal depositAmount;
+    private String damageType;
     private BigDecimal deductionAmount;
     private String remark;
     @TableField(fill = FieldFill.INSERT)

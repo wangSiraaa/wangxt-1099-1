@@ -12,5 +12,6 @@ public class PalletReturnDetailDTO {
     private Long pickupDetailId;
     @NotBlank(message = "归还状态不能为空")
     private String returnStatus;
+    private String damageType;
     private String remark;
 }

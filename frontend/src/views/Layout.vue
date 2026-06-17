@@ -17,9 +17,11 @@
         <el-menu-item index="/pallets" v-if="isFinance"><el-icon><Goods /></el-icon><span>托盘管理</span></el-menu-item>
         <el-menu-item index="/deposits"><el-icon><Wallet /></el-icon><span>押金管理</span></el-menu-item>
         <el-menu-item index="/pickups" v-if="isShipper || isFinance"><el-icon><TakeawayBox /></el-icon><span>托盘领用</span></el-menu-item>
+        <el-menu-item index="/transfers" v-if="isCarrier || isFinance"><el-icon><Switch /></el-icon><span>托盘转运</span></el-menu-item>
         <el-menu-item index="/returns" v-if="isCarrier || isFinance"><el-icon><RefreshRight /></el-icon><span>托盘归还</span></el-menu-item>
         <el-menu-item index="/deductions" v-if="isFinance"><el-icon><Money /></el-icon><span>扣款管理</span></el-menu-item>
         <el-menu-item index="/periods" v-if="isFinance"><el-icon><Calendar /></el-icon><span>账期管理</span></el-menu-item>
+        <el-menu-item index="/lifecycle"><el-icon><TrendCharts /></el-icon><span>生命周期追踪</span></el-menu-item>
       </el-menu>
     </el-aside>
     <el-container>
@@ -49,7 +51,7 @@
 import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { Box, DataAnalysis, Goods, Wallet, TakeawayBox, RefreshRight, Money, Calendar, SwitchButton } from '@element-plus/icons-vue'
+import { Box, DataAnalysis, Goods, Wallet, TakeawayBox, RefreshRight, Money, Calendar, SwitchButton, Switch, TrendCharts } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()

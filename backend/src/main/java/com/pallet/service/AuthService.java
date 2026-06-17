@@ -49,6 +49,8 @@ public class AuthService {
                 return "承运商";
             case BusinessConstants.ROLE_FINANCE:
                 return "财务";
+            case BusinessConstants.ROLE_STORE:
+                return "门店";
             default:
                 return "未知角色";
         }

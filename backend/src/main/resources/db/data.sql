@@ -4,7 +4,9 @@ INSERT INTO sys_user (user_code, user_name, password, role_type, phone) VALUES
 ('CARRIER001', '顺丰物流', '123456', 'CARRIER', '13900000001'),
 ('CARRIER002', '圆通速递', '123456', 'CARRIER', '13900000002'),
 ('FINANCE001', '财务主管', '123456', 'FINANCE', '13700000001'),
-('ADMIN001', '系统管理员', '123456', 'FINANCE', '13700000002');
+('ADMIN001', '系统管理员', '123456', 'FINANCE', '13700000002'),
+('STORE001', '上海徐汇门店', '123456', 'STORE', '13600000001'),
+('STORE002', '北京朝阳门店', '123456', 'STORE', '13600000002');
 
 INSERT INTO pallet (pallet_code, pallet_name, specification, deposit_amount, status) VALUES
 ('P001', '标准木托盘', '1200x1000x150mm', 100.00, 'AVAILABLE'),

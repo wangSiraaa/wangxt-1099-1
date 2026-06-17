@@ -15,6 +15,10 @@ public class PalletPickup {
     private Long shipperId;
     private String shipperName;
     private Integer palletCount;
+    private Long carrierId;
+    private String carrierName;
+    private Long destStoreId;
+    private String destStoreName;
     private BigDecimal totalDeposit;
     private LocalDate pickupDate;
     private Long periodId;

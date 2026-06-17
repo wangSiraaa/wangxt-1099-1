@@ -7,26 +7,25 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("pallet_return")
-public class PalletReturn {
+@TableName("pallet_transfer")
+public class PalletTransfer {
     @TableId(type = IdType.AUTO)
     private Long id;
-    private String returnNo;
-    private Long carrierId;
-    private String carrierName;
+    private String transferNo;
+    private Long pickupDetailId;
+    private Long palletId;
+    private String palletCode;
+    private Long fromCarrierId;
+    private String fromCarrierName;
+    private Long toCarrierId;
+    private String toCarrierName;
     private Long shipperId;
     private String shipperName;
-    private Integer returnCount;
-    private Integer normalCount;
-    private Integer missingPartCount;
-    private Integer stainCount;
-    private Integer scrappedCount;
-    private Integer lostCount;
-    @Deprecated
-    private Integer damagedCount;
-    private LocalDate returnDate;
+    private Long depositBearerId;
+    private String depositBearerName;
+    private BigDecimal depositAmount;
+    private LocalDate transferDate;
     private Long periodId;
-    private BigDecimal deductionAmount;
     private String status;
     private String remark;
     private Long createBy;

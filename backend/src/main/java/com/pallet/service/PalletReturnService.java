@@ -98,12 +98,17 @@ public class PalletReturnService {
         }
 
         int normalCount = 0;
-        int damagedCount = 0;
-        int lostCount = 0;
-        BigDecimal totalDeduction = BigDecimal.ZERO;
+        int missingPartCount = 0;
+        int stainCount = 0;
+        int scrappedCount = 0000000000;
         List<PalletReturnDetail> returnDetails = new ArrayList<>();
         List<PalletPickupDetail> toUpdatePickupDetails = new ArrayList<>();
         Set<Long> pickupIds = new HashSet<>();
+
+        BigDecimal missingPartDeductionTotal = BigDecimal.ZERO;
+        BigDecimal stainDeductionTotal = BigDecimal.ZERO;
+        BigDecimal scrappedDeductionTotal = BigDecimal.ZERO;
+        BigDecimal lostDeductionTotal = BigDecimal.ZERO;
 
         for (PalletReturnDetailDTO detailDTO : dto.getDetails()) {
             Pallet pallet = palletService.getById(detailDTO.getPalletId());
@@ -122,31 +127,77 @@ public class PalletReturnService {
             retDetail.setReturnStatus(detailDTO.getReturnStatus());
             retDetail.setDepositAmount(pallet.getDepositAmount());
             retDetail.setPickupId(pickupDetail.getPickupId());
+            retDetail.setDamageType(detailDTO.getDamageType());
             retDetail.setRemark(detailDTO.getRemark());
             pickupIds.add(pickupDetail.getPickupId());
 
             BigDecimal deduction = BigDecimal.ZERO;
-            switch (detailDTO.getReturnStatus()) {
-                case BusinessConstants.RETURN_STATUS_NORMAL:
-                    normalCount++;
-                    pickupDetail.setReturnStatus(BusinessConstants.RETURN_STATUS_NORMAL);
-                    toUpdatePickupDetails.add(pickupDetail);
-                    break;
-                case BusinessConstants.RETURN_STATUS_DAMAGED:
-                    damagedCount++;
-                    deduction = noGenerator.calculateDamagedDeduction(pallet.getDepositAmount());
-                    pickupDetail.setReturnStatus(BusinessConstants.RETURN_STATUS_DAMAGED);
-                    toUpdatePickupDetails.add(pickupDetail);
-                    break;
-                case BusinessConstants.RETURN_STATUS_LOST:
-                    lostCount++;
-                    deduction = noGenerator.calculateLostDeduction(pallet.getDepositAmount());
-                    pickupDetail.setReturnStatus(BusinessConstants.RETURN_STATUS_LOST);
-                    toUpdatePickupDetails.add(pickupDetail);
-                    break;
-                default:
-                    throw new BusinessException("未知的归还状态: " + detailDTO.getReturnStatus());
+            String returnStatus = detailDTO.getReturnStatus();
+
+            if (BusinessConstants.RETURN_STATUS_NORMAL.equals(returnStatus)) {
+                normalCount++;
+                pickupDetail.setReturnStatus(BusinessConstants.RETURN_STATUS_NORMAL);
+                toUpdatePickupDetails.add(pickupDetail);
+
+            } else if (BusinessConstants.RETURN_STATUS_MISSING_PART.equals(returnStatus)) {
+                missingPartCount++;
+                deduction = noGenerator.calculateMissingPartDeduction(pallet.getDepositAmount());
+                retDetail.setDamageType(BusinessConstants.DAMAGE_TYPE_MISSING_PART);
+                pickupDetail.setReturnStatus(BusinessConstants.RETURN_STATUS_MISSING_PART);
+                toUpdatePickupDetails.add(pickupDetail);
+                missingPartDeductionTotal = missingPartDeductionTotal.add(deduction);
+
+            } else if (BusinessConstants.RETURN_STATUS_STAIN.equals(returnStatus)) {
+                stainCount++;
+                deduction = noGenerator.calculateStainDeduction(pallet.getDepositAmount());
+                retDetail.setDamageType(BusinessConstants.DAMAGE_TYPE_STAIN);
+                pickupDetail.setReturnStatus(BusinessConstants.RETURN_STATUS_STAIN);
+                toUpdatePickupDetails.add(pickupDetail);
+                stainDeductionTotal = stainDeductionTotal.add(deduction);
+
+            } else if (BusinessConstants.RETURN_STATUS_SCRAPPED.equals(returnStatus)) {
+                scrappedCount++;
+                deduction = noGenerator.calculateScrappedDeduction(pallet.getDepositAmount());
+                retDetail.setDamageType(BusinessConstants.DAMAGE_TYPE_SCRAPPED);
+                pickupDetail.setReturnStatus(BusinessConstants.RETURN_STATUS_SCRAPPED);
+                toUpdatePickupDetails.add(pickupDetail);
+                scrappedDeductionTotal = scrappedDeductionTotal.add(deduction);
+
+            } else if (BusinessConstants.RETURN_STATUS_LOST.equals(returnStatus)) {
+                lostCount++;
+                deduction = noGenerator.calculateLostDeduction(pallet.getDepositAmount());
+                pickupDetail.setReturnStatus(BusinessConstants.RETURN_STATUS_LOST);
+                toUpdatePickupDetails.add(pickupDetail);
+                lostDeductionTotal = lostDeductionTotal.add(deduction);
+
+            } else if (BusinessConstants.RETURN_STATUS_DAMAGED.equals(returnStatus)) {
+                String damageType = detailDTO.getDamageType();
+                if (BusinessConstants.DAMAGE_TYPE_MISSING_PART.equals(damageType)) {
+                    missingPartCount++;
+                    deduction = noGenerator.calculateMissingPartDeduction(pallet.getDepositAmount());
+                    missingPartDeductionTotal = missingPartDeductionTotal.add(deduction);
+                } else if (BusinessConstants.DAMAGE_TYPE_STAIN.equals(damageType)) {
+                    stainCount++;
+                    deduction = noGenerator.calculateStainDeduction(pallet.getDepositAmount());
+                    stainDeductionTotal = stainDeductionTotal.add(deduction);
+                } else if (BusinessConstants.DAMAGE_TYPE_SCRAPPED.equals(damageType)) {
+                    scrappedCount++;
+                    deduction = noGenerator.calculateScrappedDeduction(pallet.getDepositAmount());
+                    scrappedDeductionTotal = scrappedDeductionTotal.add(deduction);
+                } else {
+                    throw new BusinessException(
+                            String.format("托盘[%s]损坏类型[%s]不正确，必须是缺件、污损或整托报废",
+                                    pallet.getPalletCode(), damageType)
+                    );
+                }
+                retDetail.setDamageType(damageType);
+                pickupDetail.setReturnStatus(returnStatus);
+                toUpdatePickupDetails.add(pickupDetail);
+
+            } else {
+                throw new BusinessException("未知的归还状态: " + returnStatus);
             }
+
             retDetail.setDeductionAmount(deduction);
             totalDeduction = totalDeduction.add(deduction);
             returnDetails.add(retDetail);
@@ -160,7 +211,9 @@ public class PalletReturnService {
         ret.setShipperName(shipper.getUserName());
         ret.setReturnCount(dto.getDetails().size());
         ret.setNormalCount(normalCount);
-        ret.setDamagedCount(damagedCount);
+        ret.setMissingPartCount(missingPartCount);
+        ret.setStainCount(stainCount);
+        ret.setScrappedCount(scrappedCount);
         ret.setLostCount(lostCount);
         ret.setReturnDate(dto.getReturnDate());
         ret.setPeriodId(period != null ? period.getId() : null);
@@ -187,19 +240,45 @@ public class PalletReturnService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         depositService.unfreezeDeposit(dto.getShipperId(), unfreezeDeposit);
 
-        if (damagedCount > 0 || lostCount > 0) {
-            if (damagedCount > 0) {
+        if (missingPartCount > 0 || stainCount > 0 || scrappedCount > 0 || lostCount > 0) {
+            if (missingPartCount > 0) {
                 deductionService.createDeduction(
                         dto.getShipperId(),
                         shipper.getUserName(),
-                        BusinessConstants.DEDUCTION_TYPE_DAMAGED,
-                        returnDetails.stream()
-                                .filter(d -> BusinessConstants.RETURN_STATUS_DAMAGED.equals(d.getReturnStatus()))
-                                .map(PalletReturnDetail::getDeductionAmount)
-                                .reduce(BigDecimal.ZERO, BigDecimal::add),
+                        BusinessConstants.DEDUCTION_TYPE_MISSING_PART,
+                        BusinessConstants.DAMAGE_TYPE_MISSING_PART,
+                        missingPartDeductionTotal,
                         dto.getReturnDate(),
                         period != null ? period.getId() : null,
-                        damagedCount,
+                        missingPartCount,
+                        ret.getId(),
+                        userId
+                );
+            }
+            if (stainCount > 0) {
+                deductionService.createDeduction(
+                        dto.getShipperId(),
+                        shipper.getUserName(),
+                        BusinessConstants.DEDUCTION_TYPE_STAIN,
+                        BusinessConstants.DAMAGE_TYPE_STAIN,
+                        stainDeductionTotal,
+                        dto.getReturnDate(),
+                        period != null ? period.getId() : null,
+                        stainCount,
+                        ret.getId(),
+                        userId
+                );
+            }
+            if (scrappedCount > 0) {
+                deductionService.createDeduction(
+                        dto.getShipperId(),
+                        shipper.getUserName(),
+                        BusinessConstants.DEDUCTION_TYPE_SCRAPPED,
+                        BusinessConstants.DAMAGE_TYPE_SCRAPPED,
+                        scrappedDeductionTotal,
+                        dto.getReturnDate(),
+                        period != null ? period.getId() : null,
+                        scrappedCount,
                         ret.getId(),
                         userId
                 );
@@ -209,10 +288,8 @@ public class PalletReturnService {
                         dto.getShipperId(),
                         shipper.getUserName(),
                         BusinessConstants.DEDUCTION_TYPE_LOST,
-                        returnDetails.stream()
-                                .filter(d -> BusinessConstants.RETURN_STATUS_LOST.equals(d.getReturnStatus()))
-                                .map(PalletReturnDetail::getDeductionAmount)
-                                .reduce(BigDecimal.ZERO, BigDecimal::add),
+                        null,
+                        lostDeductionTotal,
                         dto.getReturnDate(),
                         period != null ? period.getId() : null,
                         lostCount,
@@ -227,8 +304,12 @@ public class PalletReturnService {
             String status = rd.getReturnStatus();
             if (BusinessConstants.RETURN_STATUS_NORMAL.equals(status)) {
                 palletService.updateStatus(rd.getPalletId(), BusinessConstants.PALLET_STATUS_AVAILABLE);
-            } else if (BusinessConstants.RETURN_STATUS_DAMAGED.equals(status)) {
+            } else if (BusinessConstants.RETURN_STATUS_MISSING_PART.equals(status)
+                    || BusinessConstants.RETURN_STATUS_STAIN.equals(status)
+                    || BusinessConstants.RETURN_STATUS_DAMAGED.equals(status)) {
                 palletService.updateStatus(rd.getPalletId(), BusinessConstants.PALLET_STATUS_DAMAGED);
+            } else if (BusinessConstants.RETURN_STATUS_SCRAPPED.equals(status)) {
+                palletService.updateStatus(rd.getPalletId(), BusinessConstants.PALLET_STATUS_SCRAPPED);
             } else if (BusinessConstants.RETURN_STATUS_LOST.equals(status)) {
                 palletService.updateStatus(rd.getPalletId(), BusinessConstants.PALLET_STATUS_LOST);
             }

@@ -18,10 +18,9 @@
         </el-table-column>
         <el-table-column prop="closeTime" label="关闭时间" width="170" />
         <el-table-column prop="remark" label="备注" show-overflow-tooltip />
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="140" fixed="right">
           <template #default="{row}">
             <el-button v-if="row.status==='OPEN'" type="warning" link size="small" @click="handleClose(row)">关账</el-button>
-            <el-button v-if="row.status==='CLOSED'" type="success" link size="small" @click="handleReopen(row)">重开</el-button>
             <el-button v-if="row.status==='OPEN'" type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
@@ -60,7 +59,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import {
   listAccountPeriods, createAccountPeriod,
-  closePeriod, reopenPeriod, deletePeriod
+  closePeriod, deletePeriod
 } from '../../api/accountPeriod'
 
 const currentUser = JSON.parse(localStorage.getItem('pallet_user') || '{}')
@@ -113,11 +112,6 @@ const handleClose = (row) => {
     ElMessage.success('账期已关闭')
     loadData()
   }).catch(() => {})
-}
-const handleReopen = (row) => {
-  ElMessageBox.confirm(`确认重开账期[${row.periodName}]吗？重开后该账期的记录将可以修改。`, '提示', { type: 'warning' })
-    .then(async () => { await reopenPeriod(row.id); ElMessage.success('账期已重开'); loadData() })
-    .catch(() => {})
 }
 const handleDelete = (row) => {
   ElMessageBox.confirm(`确认删除账期[${row.periodName}]吗？`, '提示', { type: 'warning' })

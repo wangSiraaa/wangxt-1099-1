@@ -12,9 +12,11 @@ const routes = [
       { path: 'pallets', name: 'PalletList', component: () => import('../views/pallet/PalletList.vue'), meta: { title: '托盘管理' } },
       { path: 'deposits', name: 'DepositList', component: () => import('../views/deposit/DepositList.vue'), meta: { title: '押金管理' } },
       { path: 'pickups', name: 'PickupList', component: () => import('../views/pickup/PickupList.vue'), meta: { title: '托盘领用' } },
+      { path: 'transfers', name: 'TransferList', component: () => import('../views/transfer/TransferList.vue'), meta: { title: '托盘转运' } },
       { path: 'returns', name: 'ReturnList', component: () => import('../views/return/ReturnList.vue'), meta: { title: '托盘归还' } },
       { path: 'deductions', name: 'DeductionList', component: () => import('../views/deduction/DeductionList.vue'), meta: { title: '扣款管理' } },
-      { path: 'periods', name: 'PeriodList', component: () => import('../views/period/PeriodList.vue'), meta: { title: '账期管理' } }
+      { path: 'periods', name: 'PeriodList', component: () => import('../views/period/PeriodList.vue'), meta: { title: '账期管理' } },
+      { path: 'lifecycle', name: 'DepositLifecycle', component: () => import('../views/lifecycle/DepositLifecycle.vue'), meta: { title: '押金生命周期追踪' } }
     ]
   }
 ]

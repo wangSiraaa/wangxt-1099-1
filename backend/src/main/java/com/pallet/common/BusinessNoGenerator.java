@@ -23,6 +23,15 @@ public class BusinessNoGenerator {
     @Value("${pallet.deposit.lost-rate:1.00}")
     private BigDecimal lostRate;
 
+    @Value("${pallet.deposit.missing-part-rate:0.30}")
+    private BigDecimal missingPartRate;
+
+    @Value("${pallet.deposit.stain-rate:0.20}")
+    private BigDecimal stainRate;
+
+    @Value("${pallet.deposit.scrapped-rate:1.00}")
+    private BigDecimal scrappedRate;
+
     public String generatePaymentNo() {
         return "DP" + LocalDate.now().format(DATE_FORMATTER) + String.format("%03d", COUNTER.getAndIncrement());
     }
@@ -39,6 +48,10 @@ public class BusinessNoGenerator {
         return "DD" + LocalDate.now().format(DATE_FORMATTER) + String.format("%03d", COUNTER.getAndIncrement());
     }
 
+    public String generateTransferNo() {
+        return "TF" + LocalDate.now().format(DATE_FORMATTER) + String.format("%03d", COUNTER.getAndIncrement());
+    }
+
     public BigDecimal getDefaultDepositAmount() {
         return defaultDepositAmount;
     }
@@ -51,11 +64,35 @@ public class BusinessNoGenerator {
         return lostRate;
     }
 
+    public BigDecimal getMissingPartRate() {
+        return missingPartRate;
+    }
+
+    public BigDecimal getStainRate() {
+        return stainRate;
+    }
+
+    public BigDecimal getScrappedRate() {
+        return scrappedRate;
+    }
+
     public BigDecimal calculateDamagedDeduction(BigDecimal depositAmount) {
         return depositAmount.multiply(damagedRate);
     }
 
     public BigDecimal calculateLostDeduction(BigDecimal depositAmount) {
         return depositAmount.multiply(lostRate);
+    }
+
+    public BigDecimal calculateMissingPartDeduction(BigDecimal depositAmount) {
+        return depositAmount.multiply(missingPartRate);
+    }
+
+    public BigDecimal calculateStainDeduction(BigDecimal depositAmount) {
+        return depositAmount.multiply(stainRate);
+    }
+
+    public BigDecimal calculateScrappedDeduction(BigDecimal depositAmount) {
+        return depositAmount.multiply(scrappedRate);
     }
 }

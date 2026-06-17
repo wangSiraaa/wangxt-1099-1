@@ -20,7 +20,9 @@ CREATE TABLE IF NOT EXISTS pallet (
     remark VARCHAR(500),
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted INT DEFAULT 0
+    deleted INT DEFAULT 0,
+    INDEX idx_pallet_code (pallet_code),
+    INDEX idx_status (status)
 );
 
 CREATE TABLE IF NOT EXISTS account_period (
@@ -75,6 +77,10 @@ CREATE TABLE IF NOT EXISTS pallet_pickup (
     pickup_no VARCHAR(30) NOT NULL UNIQUE,
     shipper_id BIGINT NOT NULL,
     shipper_name VARCHAR(100),
+    carrier_id BIGINT,
+    carrier_name VARCHAR(100),
+    dest_store_id BIGINT,
+    dest_store_name VARCHAR(100),
     pallet_count INT NOT NULL,
     total_deposit DECIMAL(12,2) NOT NULL,
     pickup_date DATE NOT NULL,
@@ -84,7 +90,11 @@ CREATE TABLE IF NOT EXISTS pallet_pickup (
     create_by BIGINT,
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted INT DEFAULT 0
+    deleted INT DEFAULT 0,
+    INDEX idx_shipper_id (shipper_id),
+    INDEX idx_carrier_id (carrier_id),
+    INDEX idx_pickup_date (pickup_date),
+    INDEX idx_status (status)
 );
 
 CREATE TABLE IF NOT EXISTS pallet_pickup_detail (
@@ -93,9 +103,45 @@ CREATE TABLE IF NOT EXISTS pallet_pickup_detail (
     pallet_id BIGINT NOT NULL,
     pallet_code VARCHAR(50),
     deposit_amount DECIMAL(10,2) NOT NULL,
+    current_holder_id BIGINT,
+    current_holder_name VARCHAR(100),
     return_status VARCHAR(20) DEFAULT 'NOT_RETURNED',
     remark VARCHAR(500),
-    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_pickup_id (pickup_id),
+    INDEX idx_pallet_id (pallet_id),
+    INDEX idx_current_holder_id (current_holder_id),
+    INDEX idx_return_status (return_status)
+);
+
+CREATE TABLE IF NOT EXISTS pallet_transfer (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    transfer_no VARCHAR(30) NOT NULL UNIQUE,
+    pickup_detail_id BIGINT NOT NULL,
+    pallet_id BIGINT NOT NULL,
+    pallet_code VARCHAR(50),
+    from_carrier_id BIGINT NOT NULL,
+    from_carrier_name VARCHAR(100),
+    to_carrier_id BIGINT NOT NULL,
+    to_carrier_name VARCHAR(100),
+    shipper_id BIGINT NOT NULL,
+    shipper_name VARCHAR(100),
+    deposit_bearer_id BIGINT,
+    deposit_bearer_name VARCHAR(100),
+    deposit_amount DECIMAL(10,2),
+    transfer_date DATE NOT NULL,
+    period_id BIGINT,
+    status VARCHAR(20) NOT NULL DEFAULT 'CONFIRMED',
+    remark VARCHAR(500),
+    create_by BIGINT,
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted INT DEFAULT 0,
+    INDEX idx_pickup_detail_id (pickup_detail_id),
+    INDEX idx_pallet_id (pallet_id),
+    INDEX idx_from_carrier_id (from_carrier_id),
+    INDEX idx_to_carrier_id (to_carrier_id),
+    INDEX idx_status (status)
 );
 
 CREATE TABLE IF NOT EXISTS pallet_return (
@@ -107,7 +153,9 @@ CREATE TABLE IF NOT EXISTS pallet_return (
     shipper_name VARCHAR(100),
     return_count INT NOT NULL,
     normal_count INT DEFAULT 0,
-    damaged_count INT DEFAULT 0,
+    missing_part_count INT DEFAULT 0,
+    stain_count INT DEFAULT 0,
+    scrapped_count INT DEFAULT 0,
     lost_count INT DEFAULT 0,
     return_date DATE NOT NULL,
     period_id BIGINT,
@@ -117,7 +165,11 @@ CREATE TABLE IF NOT EXISTS pallet_return (
     create_by BIGINT,
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted INT DEFAULT 0
+    deleted INT DEFAULT 0,
+    INDEX idx_carrier_id (carrier_id),
+    INDEX idx_shipper_id (shipper_id),
+    INDEX idx_return_date (return_date),
+    INDEX idx_period_id (period_id)
 );
 
 CREATE TABLE IF NOT EXISTS pallet_return_detail (
@@ -127,6 +179,7 @@ CREATE TABLE IF NOT EXISTS pallet_return_detail (
     pallet_id BIGINT NOT NULL,
     pallet_code VARCHAR(50),
     return_status VARCHAR(20) NOT NULL,
+    damage_type VARCHAR(20),
     deposit_amount DECIMAL(10,2),
     deduction_amount DECIMAL(10,2) DEFAULT 0.00,
     remark VARCHAR(500),
@@ -140,6 +193,7 @@ CREATE TABLE IF NOT EXISTS deduction (
     shipper_id BIGINT NOT NULL,
     shipper_name VARCHAR(100),
     deduction_type VARCHAR(20) NOT NULL,
+    damage_type VARCHAR(20),
     deduction_amount DECIMAL(12,2) NOT NULL,
     deduction_date DATE NOT NULL,
     period_id BIGINT,

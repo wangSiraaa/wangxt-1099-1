@@ -17,6 +17,7 @@ public class Deduction {
     private String shipperName;
     private String deductionType;
     private BigDecimal deductionAmount;
+    private String damageType;
     private LocalDate deductionDate;
     private Long periodId;
     private Integer palletCount;

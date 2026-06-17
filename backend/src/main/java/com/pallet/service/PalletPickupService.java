@@ -89,6 +89,22 @@ public class PalletPickupService {
             throw new BusinessException("只有发货方可以领用托盘");
         }
 
+        SysUser carrier = authService.getById(dto.getCarrierId());
+        if (carrier == null) {
+            throw new BusinessException("承运商不存在");
+        }
+        if (!BusinessConstants.ROLE_CARRIER.equals(carrier.getRoleType())) {
+            throw new BusinessException("领用时指定的用户不是承运商角色");
+        }
+
+        SysUser destStore = authService.getById(dto.getDestStoreId());
+        if (destStore == null) {
+            throw new BusinessException("目的门店不存在");
+        }
+        if (!BusinessConstants.ROLE_STORE.equals(destStore.getRoleType())) {
+            throw new BusinessException("目的门店必须是门店角色");
+        }
+
         List<Pallet> pallets = new ArrayList<>();
         BigDecimal totalDeposit = BigDecimal.ZERO;
         for (PalletPickupDetailDTO detailDTO : dto.getDetails()) {
@@ -110,6 +126,10 @@ public class PalletPickupService {
         pickup.setPickupNo(noGenerator.generatePickupNo());
         pickup.setShipperId(dto.getShipperId());
         pickup.setShipperName(shipper.getUserName());
+        pickup.setCarrierId(dto.getCarrierId());
+        pickup.setCarrierName(carrier.getUserName());
+        pickup.setDestStoreId(dto.getDestStoreId());
+        pickup.setDestStoreName(destStore.getUserName());
         pickup.setPalletCount(dto.getDetails().size());
         pickup.setTotalDeposit(totalDeposit);
         pickup.setPickupDate(dto.getPickupDate());
@@ -126,6 +146,8 @@ public class PalletPickupService {
             detail.setPalletId(pallet.getId());
             detail.setPalletCode(pallet.getPalletCode());
             detail.setDepositAmount(pallet.getDepositAmount());
+            detail.setCurrentHolderId(carrier.getId());
+            detail.setCurrentHolderName(carrier.getUserName());
             detail.setReturnStatus("NOT_RETURNED");
             detail.setRemark(dto.getDetails().get(i).getRemark());
             palletPickupDetailMapper.insert(detail);

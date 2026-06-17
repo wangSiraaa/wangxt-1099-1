@@ -106,18 +106,6 @@ public class AccountPeriodService {
     }
 
     @Transactional
-    public void reopenPeriod(Long id) {
-        AccountPeriod period = getById(id);
-        if (BusinessConstants.PERIOD_STATUS_OPEN.equals(period.getStatus())) {
-            throw new BusinessException("账期未关闭，无需重开");
-        }
-        period.setStatus(BusinessConstants.PERIOD_STATUS_OPEN);
-        period.setCloseTime(null);
-        period.setCloseBy(null);
-        accountPeriodMapper.updateById(period);
-    }
-
-    @Transactional
     public void delete(Long id) {
         AccountPeriod period = getById(id);
         if (BusinessConstants.PERIOD_STATUS_CLOSED.equals(period.getStatus())) {
