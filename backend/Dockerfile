@@ -1,5 +1,5 @@
 # 物流托盘押金系统 - 后端 Dockerfile
-FROM maven:3.9-eclipse-temurin-21-jammy AS builder
+FROM maven:3.9-eclipse-temurin-17-jammy AS builder
 WORKDIR /app
 
 COPY pom.xml .
@@ -8,7 +8,7 @@ RUN mvn dependency:go-offline -B
 COPY src ./src
 RUN mvn clean package -DskipTests -B
 
-FROM eclipse-temurin:21-jre-jammy
+FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 
 ENV TZ=Asia/Shanghai

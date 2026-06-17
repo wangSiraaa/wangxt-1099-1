@@ -14,15 +14,17 @@ CREATE TABLE IF NOT EXISTS pallet (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     pallet_code VARCHAR(50) NOT NULL UNIQUE,
     pallet_name VARCHAR(100),
+    pallet_type VARCHAR(50),
     specification VARCHAR(200),
     deposit_amount DECIMAL(10,2) NOT NULL DEFAULT 100.00,
     status VARCHAR(20) NOT NULL DEFAULT 'AVAILABLE',
     remark VARCHAR(500),
+    create_by BIGINT,
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted INT DEFAULT 0,
     INDEX idx_pallet_code (pallet_code),
-    INDEX idx_status (status)
+    INDEX idx_pallet_status (status)
 );
 
 CREATE TABLE IF NOT EXISTS account_period (
@@ -91,10 +93,10 @@ CREATE TABLE IF NOT EXISTS pallet_pickup (
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted INT DEFAULT 0,
-    INDEX idx_shipper_id (shipper_id),
-    INDEX idx_carrier_id (carrier_id),
+    INDEX idx_pickup_shipper_id (shipper_id),
+    INDEX idx_pickup_carrier_id (carrier_id),
     INDEX idx_pickup_date (pickup_date),
-    INDEX idx_status (status)
+    INDEX idx_pickup_status (status)
 );
 
 CREATE TABLE IF NOT EXISTS pallet_pickup_detail (
@@ -137,11 +139,11 @@ CREATE TABLE IF NOT EXISTS pallet_transfer (
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted INT DEFAULT 0,
-    INDEX idx_pickup_detail_id (pickup_detail_id),
-    INDEX idx_pallet_id (pallet_id),
-    INDEX idx_from_carrier_id (from_carrier_id),
-    INDEX idx_to_carrier_id (to_carrier_id),
-    INDEX idx_status (status)
+    INDEX idx_transfer_pickup_detail_id (pickup_detail_id),
+    INDEX idx_transfer_pallet_id (pallet_id),
+    INDEX idx_transfer_from_carrier_id (from_carrier_id),
+    INDEX idx_transfer_to_carrier_id (to_carrier_id),
+    INDEX idx_transfer_status (status)
 );
 
 CREATE TABLE IF NOT EXISTS pallet_return (
@@ -157,6 +159,7 @@ CREATE TABLE IF NOT EXISTS pallet_return (
     stain_count INT DEFAULT 0,
     scrapped_count INT DEFAULT 0,
     lost_count INT DEFAULT 0,
+    damaged_count INT DEFAULT 0,
     return_date DATE NOT NULL,
     period_id BIGINT,
     deduction_amount DECIMAL(12,2) DEFAULT 0.00,
