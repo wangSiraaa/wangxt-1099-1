@@ -19,6 +19,7 @@ public class BusinessConstants {
     public static final String PICKUP_STATUS_IN_TRANSIT = "IN_TRANSIT";
 
     public static final String RETURN_STATUS_NORMAL = "NORMAL";
+    public static final String RETURN_STATUS_DAMAGED = "DAMAGED";
     public static final String RETURN_STATUS_MISSING_PART = "MISSING_PART";
     public static final String RETURN_STATUS_STAIN = "STAIN";
     public static final String RETURN_STATUS_SCRAPPED = "SCRAPPED";

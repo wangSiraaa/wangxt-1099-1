@@ -31,12 +31,12 @@ public class PalletTransferController {
         return Result.success(palletTransferService.getById(id));
     }
 
-    @GetMapping("/pickup-detail/{pickupDetailId}")
+    @GetMapping("/by-pickup-detail/{pickupDetailId}")
     public Result<List<PalletTransfer>> getByPickupDetailId(@PathVariable Long pickupDetailId) {
         return Result.success(palletTransferService.getByPickupDetailId(pickupDetailId));
     }
 
-    @GetMapping("/pallet/{palletId}")
+    @GetMapping("/by-pallet/{palletId}")
     public Result<List<PalletTransfer>> getByPalletId(@PathVariable Long palletId) {
         return Result.success(palletTransferService.getByPalletId(palletId));
     }
@@ -48,7 +48,7 @@ public class PalletTransferController {
         return Result.success(palletTransferService.createTransfer(dto, userId));
     }
 
-    @PostMapping("/{id}/cancel")
+    @PutMapping("/{id}/cancel")
     public Result<Void> cancel(
             @PathVariable Long id,
             @RequestHeader(value = "X-User-Id", defaultValue = "2") Long userId) {

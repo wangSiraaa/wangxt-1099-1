@@ -100,7 +100,9 @@ public class PalletReturnService {
         int normalCount = 0;
         int missingPartCount = 0;
         int stainCount = 0;
-        int scrappedCount = 0000000000;
+        int scrappedCount = 0;
+        int lostCount = 0;
+        BigDecimal totalDeduction = BigDecimal.ZERO;
         List<PalletReturnDetail> returnDetails = new ArrayList<>();
         List<PalletPickupDetail> toUpdatePickupDetails = new ArrayList<>();
         Set<Long> pickupIds = new HashSet<>();

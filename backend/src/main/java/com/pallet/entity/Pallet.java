@@ -12,10 +12,12 @@ public class Pallet {
     private Long id;
     private String palletCode;
     private String palletName;
+    private String palletType;
     private String specification;
     private BigDecimal depositAmount;
     private String status;
     private String remark;
+    private Long createBy;
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
     @TableField(fill = FieldFill.INSERT_UPDATE)

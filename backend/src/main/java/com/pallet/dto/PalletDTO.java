@@ -9,6 +9,7 @@ public class PalletDTO {
     @NotBlank(message = "托盘编码不能为空")
     private String palletCode;
     private String palletName;
+    private String palletType;
     private String specification;
     @NotNull(message = "押金金额不能为空")
     @Positive(message = "押金金额必须大于0")
