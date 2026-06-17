@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  pallet-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pallet-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:h2:file:/data/pallet_db;MODE=MySQL;DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE
+      - SPRING_DATASOURCE_USERNAME=sa
+      - SPRING_DATASOURCE_PASSWORD=
+      - PALLET_DEPOSIT_DEFAULT_AMOUNT=100.00
+      - PALLET_DEPOSIT_DAMAGED_RATE=0.50
+      - PALLET_DEPOSIT_LOST_RATE=1.00
+    volumes:
+      - pallet-data:/data
+    networks:
+      - pallet-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/auth/users"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  pallet-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pallet-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      pallet-backend:
+        condition: service_healthy
+    networks:
+      - pallet-network
+
+volumes:
+  pallet-data:
+    name: pallet-data
+
+networks:
+  pallet-network:
+    name: pallet-network
+    driver: bridge
